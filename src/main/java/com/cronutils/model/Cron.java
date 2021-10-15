@@ -71,5 +71,13 @@ public interface Cron extends Serializable {
      * @return boolean - true if equivalent; false otherwise.
      */
     boolean equivalent(final Cron cron);
+
+    /**
+     * Checks if the cron expression overlaps with another.
+     *
+     * @param cron - any cron instance, never null
+     * @return boolean - true if the expression overlaps with another; false otherwise
+     */
+    boolean overlap(final Cron cron);
 }
 

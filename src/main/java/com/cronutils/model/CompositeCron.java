@@ -79,4 +79,15 @@ public class CompositeCron implements Cron {
     public boolean equivalent(Cron cron) {
         return asString().equals(cron.asString());
     }
+
+    /**
+     * Checks if the cron expression overlaps with another.
+     *
+     * @param cron - any cron instance, never null
+     * @return boolean - true if the expression overlaps with another; false otherwise
+     */
+    @Override public boolean overlap(final Cron cron) {
+
+        return false;
+    }
 }
