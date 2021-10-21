@@ -86,7 +86,14 @@ public class CompositeCron implements Cron {
      * @param cron - any cron instance, never null
      * @return boolean - true if the expression overlaps with another; false otherwise
      */
-    @Override public boolean overlap(final Cron cron) {
+    @Override
+    public boolean overlap(final Cron cron) {
+
+        return false;
+    }
+
+    @Override
+    public boolean yearsOverlap(final Cron cron) {
 
         return false;
     }

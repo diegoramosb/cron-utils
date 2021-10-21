@@ -79,5 +79,7 @@ public interface Cron extends Serializable {
      * @return boolean - true if the expression overlaps with another; false otherwise
      */
     boolean overlap(final Cron cron);
+
+    boolean yearsOverlap(final Cron cron);
 }
 

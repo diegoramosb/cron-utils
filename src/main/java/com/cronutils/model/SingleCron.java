@@ -5,6 +5,12 @@ import com.cronutils.model.definition.CronConstraint;
 import com.cronutils.model.definition.CronDefinition;
 import com.cronutils.model.field.CronField;
 import com.cronutils.model.field.CronFieldName;
+import com.cronutils.model.field.expression.Always;
+import com.cronutils.model.field.expression.And;
+import com.cronutils.model.field.expression.Between;
+import com.cronutils.model.field.expression.Every;
+import com.cronutils.model.field.expression.FieldExpression;
+import com.cronutils.model.field.expression.On;
 import com.cronutils.model.field.expression.visitor.ValidationFieldExpressionVisitor;
 import com.cronutils.utils.Preconditions;
 
@@ -116,8 +122,79 @@ public class SingleCron implements Cron {
      * @param cron - any cron instance, never null
      * @return boolean - true if the expression overlaps with another; false otherwise
      */
-    @Override public boolean overlap(final Cron cron) {
+    @Override
+    public boolean overlap(final Cron cron) {
 
-        return false;
+        boolean overlap = false;
+
+        return overlap;
     }
+
+	public boolean yearsOverlap(final Cron cron) {
+
+		final FieldExpression thisYear = this.retrieve(CronFieldName.YEAR).getExpression();
+		final FieldExpression otherYear = cron.retrieve(CronFieldName.YEAR).getExpression();
+		boolean overlap = false;
+
+		if (Always.class.equals(thisYear.getClass()) || Always.class.equals(otherYear.getClass())) {
+			overlap = true;
+		}
+		else if (On.class.equals(thisYear.getClass())) {
+			overlap = onAndOtherOverlap((On) thisYear, otherYear);
+		}
+		else if(Every.class.equals(thisYear.getClass())) {
+			if(On.class.equals(otherYear.getClass())) {
+				overlap = yearsOnAndEveryOverlap((On) otherYear, (Every) thisYear);
+			}
+		}
+		else if(Between.class.equals(thisYear.getClass())) {
+			if(On.class.equals(otherYear.getClass())) {
+				overlap = yearsOnAndBetweenOverlap((On) otherYear, (Between) thisYear);
+			}
+		}
+		else if(And.class.equals(thisYear.getClass())) {
+			overlap = yearsOnAndOverlap((On) otherYear, (And) thisYear);
+		}
+		return overlap;
+	}
+
+	private boolean onAndOtherOverlap(final On thisYear, final FieldExpression otherYear) {
+		boolean overlap = false;
+		if (On.class.equals(otherYear.getClass())) {
+			overlap = thisYear.getTime().getValue().equals(((On) otherYear).getTime().getValue());
+		}
+		else if (Every.class.equals(otherYear.getClass())) {
+			overlap = yearsOnAndEveryOverlap(thisYear, (Every) otherYear);
+		}
+		else if (Between.class.equals(otherYear.getClass())) {
+			overlap = yearsOnAndBetweenOverlap(thisYear, (Between) otherYear);
+		}
+		else if (And.class.equals(otherYear.getClass())) {
+			overlap = yearsOnAndOverlap(thisYear, (And) otherYear);
+		}
+		return overlap;
+	}
+
+	public boolean yearsOnAndOverlap(final On onYearExpression, final And andYearExpression) {
+		return andYearExpression.getExpressions().stream()
+								.anyMatch(year -> ((On) year).getTime().getValue().equals((onYearExpression).getTime().getValue()));
+	}
+
+	public boolean yearsOnAndBetweenOverlap(final On onYearExpression, final Between betweenYearsExpression) {
+
+		return (onYearExpression).getTime().getValue() >= (Integer) (betweenYearsExpression).getFrom().getValue()
+				|| (onYearExpression).getTime().getValue() <= (Integer) (betweenYearsExpression).getTo().getValue();
+	}
+
+	public boolean yearsOnAndEveryOverlap(final On onYearExpression, final Every everyYearsExpression) {
+
+		// If there is an overlap where a specific year is included in a year sequence, the number of years until an overlap happens
+		// will be a positive integer in the following equation:
+		// numberOfYearsUntilOverlap = (specificYear - startYear)/period
+		final Double startYear = ((On) everyYearsExpression.getExpression()).getTime().getValue().doubleValue();
+		final Double period = everyYearsExpression.getPeriod().getValue().doubleValue();
+		final Double yearsForOverlap = ( onYearExpression.getTime().getValue() - startYear) / period;
+
+		return (yearsForOverlap > 0 && yearsForOverlap % 1 == 0);
+	}
 }
