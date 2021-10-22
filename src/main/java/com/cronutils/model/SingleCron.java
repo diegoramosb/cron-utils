@@ -12,6 +12,7 @@ import com.cronutils.model.field.expression.Every;
 import com.cronutils.model.field.expression.FieldExpression;
 import com.cronutils.model.field.expression.On;
 import com.cronutils.model.field.expression.visitor.ValidationFieldExpressionVisitor;
+import com.cronutils.model.field.value.IntegerFieldValue;
 import com.cronutils.utils.Preconditions;
 
 import java.math.BigInteger;
@@ -148,14 +149,17 @@ public class SingleCron implements Cron {
 		else if(Every.class.equals(thisYear.getClass())) {
 			overlap = everyAndOtherOverlap((Every) thisYear, otherYear);
 		}
-//		else if(Between.class.equals(thisYear.getClass())) {
-//			if(On.class.equals(otherYear.getClass())) {
-//				overlap = yearsOnAndBetweenOverlap((On) otherYear, (Between) thisYear);
-//			}
-//		}
-//		else if(And.class.equals(thisYear.getClass())) {
-//			overlap = yearsOnAndOverlap((On) otherYear, (And) thisYear);
-//		}
+		else if(Between.class.equals(thisYear.getClass())) {
+			final Integer startYear = (Integer) ((Between) thisYear).getFrom().getValue();
+			final Integer endYear = (Integer) ((Between) thisYear).getTo().getValue();
+			for(int i = startYear; i <= endYear && !overlap; i++ ) {
+				final On currentYear = new On((new IntegerFieldValue(i)));
+				overlap = onAndOtherOverlap(currentYear, otherYear);
+			}
+		}
+		else if(And.class.equals(thisYear.getClass())) {
+			overlap = ((And) thisYear).getExpressions().stream().anyMatch(year -> onAndOtherOverlap((On) year, otherYear));
+		}
 		return overlap;
 	}
 
@@ -180,7 +184,7 @@ public class SingleCron implements Cron {
 			final Integer endYear = (Integer) ((Between) otherYear).getTo().getValue();
 			boolean overlap = false;
 			for(int i = startYear; i <= endYear && !overlap; i++ ) {
-				overlap = seriesOverlap(onYearValue, onYearPeriod, BigInteger.valueOf(startYear), BigInteger.ZERO);
+				overlap = seriesOverlap(onYearValue, onYearPeriod, BigInteger.valueOf(i), BigInteger.ZERO);
 			}
 			return overlap;
 		}
@@ -211,7 +215,7 @@ public class SingleCron implements Cron {
 			final Integer endYear = (Integer) ((Between) otherYearExpression).getTo().getValue();
 			boolean overlap = false;
 			for(int i = startYear; i <= endYear && !overlap; i++ ) {
-				overlap = seriesOverlap(thisYearValue, thisYearPeriod, BigInteger.valueOf(startYear), BigInteger.ZERO);
+				overlap = seriesOverlap(thisYearValue, thisYearPeriod, BigInteger.valueOf(i), BigInteger.ZERO);
 			}
 			return overlap;
 		}
@@ -222,17 +226,6 @@ public class SingleCron implements Cron {
 																	BigInteger.valueOf(((On) year).getTime().getValue()), BigInteger.ZERO));
 		}
 		return false;
-	}
-
-	public boolean yearsOnAndOverlap(final On onYearExpression, final And andYearExpression) {
-		return andYearExpression.getExpressions().stream()
-								.anyMatch(year -> ((On) year).getTime().getValue().equals((onYearExpression).getTime().getValue()));
-	}
-
-	public boolean yearsOnAndBetweenOverlap(final On onYearExpression, final Between betweenYearsExpression) {
-
-		return (onYearExpression).getTime().getValue() >= (Integer) (betweenYearsExpression).getFrom().getValue()
-				|| (onYearExpression).getTime().getValue() <= (Integer) (betweenYearsExpression).getTo().getValue();
 	}
 
 	//https://math.stackexchange.com/questions/1656120/formula-to-find-the-first-intersection-of-two-arithmetic-progressions

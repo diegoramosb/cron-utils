@@ -101,15 +101,6 @@ public class Issue476Test {
 		assertFalse(cron1.yearsOverlap(cron2));
 	}
 
-//	@Test
-//	public void yearsOverlapTest_whenBetweenAndOnOverlap_shouldReturnTrue() {
-//
-//		Cron cron1 = cronParser.parse("0 0 0 1 JAN ? 2021-2023");
-//		Cron cron2 = cronParser.parse("0 0 0 1 JAN ? 2021");
-//
-//		assertTrue(cron1.yearsOverlap(cron2));
-//	}
-//
 	@Test
 	public void yearsOverlapTest_whenYearAfterRange_shouldReturnFalse() {
 
@@ -209,17 +200,8 @@ public class Issue476Test {
 		assertFalse(cron1.yearsOverlap(cron2));
 	}
 
-//	@Test
-//	public void yearsOverlapTest_whenOnInListReverse_shouldReturnTrue() {
-//
-//		Cron cron1 = cronParser.parse("0 0 0 1 JAN ? 2019,2021,2022");
-//		Cron cron2 = cronParser.parse("0 0 0 1 JAN ? 2021");
-//
-//		assertTrue(cron1.yearsOverlap(cron2));
-//	}
-
 	@Test
-	public void yearsOverlapTest_whenOnNotInList_shouldReturnTrue() {
+	public void yearsOverlapTest_whenOnNotInList_shouldReturnFalse() {
 
 		Cron cron1 = cronParser.parse("0 0 0 1 JAN ? 2021");
 		Cron cron2 = cronParser.parse("0 0 0 1 JAN ? 2019,2022,2023");
@@ -227,47 +209,149 @@ public class Issue476Test {
 		assertFalse(cron1.yearsOverlap(cron2));
 	}
 
-	//	@Test
-//	public void yearsOverlapTest_whenBetweenYearsDoNotOverlap_shouldReturnFalse() {
-//
-//		Cron cron1 = cronParser.parse("0 0 10 ? * * 2021-2022");
-//		Cron cron2 = cronParser.parse("0 0 10 ? * * 2023-2024");
-//
-//		assertFalse(cron1.yearsOverlap(cron2));
-//	}
-//
-//	@Test
-//	public void yearsOverlapTest_whenBetweenYearsOverlap_shouldReturnTrue() {
-//
-//		Cron cron1 = cronParser.parse("0 0 0 1 JAN ? 2020,2032,2033");
-//		Cron cron2 = cronParser.parse("0 0 10 ? * * 2022-2023");
-//
-//		assertTrue(cron1.yearsOverlap(cron2));
-//	}
 
-//	@Test
-//	public void yearsOverlapTest_whenSingleYearsDoNotOverlap_shouldReturnFalse() {
-//
-//	}
-//
-//	@Test
-//	public void overlapTest_whenMonthsDoNotOverlap_shouldReturnFalse() {
-//
-//	}
-//
-//	@Test
-//	public void overlapTest_whenCronExpressionsOverlap_shouldReturnTrue() {
-//
-//		Cron overlappingCron = cronParser.parse("0 0 10 ? * MON *");
-//
-//		assertTrue(singleCron.overlap(overlappingCron));
-//	}
-//
-//	@Test
-//	public void overlapTest_whenCronExpressionsDoNotOverlap_shouldReturnFalse() {
-//
-//		Cron nonOverlappingCron = cronParser.parse("0 0 11 ? * MON *");
-//
-//		assertFalse(singleCron.overlap(nonOverlappingCron));
-//	}
+	@Test
+	public void yearsOverlapTest_whenBetweenAndOnOverlap_shouldReturnTrue() {
+
+		Cron cron1 = cronParser.parse("0 0 0 1 JAN ? 2021-2023");
+		Cron cron2 = cronParser.parse("0 0 0 1 JAN ? 2021");
+
+		assertTrue(cron1.yearsOverlap(cron2));
+	}
+
+	@Test
+	public void yearsOverlapTest_whenBetweenAndOnNotOverlap_shouldReturnFalse() {
+
+		Cron cron1 = cronParser.parse("0 0 0 1 JAN ? 2021-2023");
+		Cron cron2 = cronParser.parse("0 0 0 1 JAN ? 2024");
+
+		assertFalse(cron1.yearsOverlap(cron2));
+	}
+
+
+	@Test
+	public void yearsOverlapTest_whenBetweenAndEveryOverlap_shouldReturnTrue() {
+
+		Cron cron1 = cronParser.parse("0 0 0 1 JAN ? 2021-2023");
+		Cron cron2 = cronParser.parse("0 0 0 1 JAN ? 2021/5");
+
+		assertTrue(cron1.yearsOverlap(cron2));
+	}
+
+	@Test
+	public void yearsOverlapTest_whenBetweenAndEveryNotOverlap_shouldReturnFalse() {
+
+		Cron cron1 = cronParser.parse("0 0 0 1 JAN ? 2022-2029");
+		Cron cron2 = cronParser.parse("0 0 0 1 JAN ? 2021/10");
+
+		assertFalse(cron1.yearsOverlap(cron2));
+	}
+
+	@Test
+	public void yearsOverlapTest_whenBetweenAndBetweenOverlap_shouldReturnTrue() {
+
+		Cron cron1 = cronParser.parse("0 0 0 1 JAN ? 2021-2023");
+		Cron cron2 = cronParser.parse("0 0 0 1 JAN ? 2023-2024");
+
+		assertTrue(cron1.yearsOverlap(cron2));
+	}
+
+	@Test
+	public void yearsOverlapTest_whenBetweenAndBetweenNotOverlap_shouldReturnFalse() {
+
+		Cron cron1 = cronParser.parse("0 0 0 1 JAN ? 2021-2023");
+		Cron cron2 = cronParser.parse("0 0 0 1 JAN ? 2024-2025");
+
+		assertFalse(cron1.yearsOverlap(cron2));
+	}
+
+	@Test
+	public void yearsOverlapTest_whenBetweenAndListOverlap_shouldReturnTrue() {
+
+		Cron cron1 = cronParser.parse("0 0 0 1 JAN ? 2021-2023");
+		Cron cron2 = cronParser.parse("0 0 0 1 JAN ? 2022,2024,2025");
+
+		assertTrue(cron1.yearsOverlap(cron2));
+	}
+
+	@Test
+	public void yearsOverlapTest_whenBetweenAndListNotOverlap_shouldReturnFalse() {
+
+		Cron cron1 = cronParser.parse("0 0 0 1 JAN ? 2021-2023");
+		Cron cron2 = cronParser.parse("0 0 0 1 JAN ? 2024,2025");
+
+		assertFalse(cron1.yearsOverlap(cron2));
+	}
+
+	@Test
+	public void yearsOverlapTest_whenListAndOnOverlap_shouldReturnTrue() {
+
+		Cron cron1 = cronParser.parse("0 0 0 1 JAN ? 2019,2021,2022");
+		Cron cron2 = cronParser.parse("0 0 0 1 JAN ? 2021");
+
+		assertTrue(cron1.yearsOverlap(cron2));
+	}
+
+	@Test
+	public void yearsOverlapTest_whenListAndOnNotOverlap_shouldReturnFalse() {
+
+		Cron cron1 = cronParser.parse("0 0 0 1 JAN ? 2019,2022,2023");
+		Cron cron2 = cronParser.parse("0 0 0 1 JAN ? 2021");
+
+		assertFalse(cron1.yearsOverlap(cron2));
+	}
+
+	@Test
+	public void yearsOverlapTest_whenListAndEveryOverlap_shouldReturnTrue() {
+
+		Cron cron1 = cronParser.parse("0 0 0 1 JAN ? 2020,2031,2045");
+		Cron cron2 = cronParser.parse("0 0 0 1 JAN ? 2021/10");
+
+		assertTrue(cron1.yearsOverlap(cron2));
+	}
+
+	@Test
+	public void yearsOverlapTest_whenListAndEveryNotOverlap_shouldReturnFalse() {
+
+		Cron cron1 = cronParser.parse("0 0 0 1 JAN ? 2020,2030,2045");
+		Cron cron2 = cronParser.parse("0 0 0 1 JAN ? 2021/10");
+
+		assertFalse(cron1.yearsOverlap(cron2));
+	}
+
+	@Test
+	public void yearsOverlapTest_whenListAndBetweenOverlap_shouldReturnTrue() {
+
+		Cron cron1 = cronParser.parse("0 0 0 1 JAN ? 2022,2024,2025");
+		Cron cron2 = cronParser.parse("0 0 0 1 JAN ? 2021-2023");
+
+		assertTrue(cron1.yearsOverlap(cron2));
+	}
+
+	@Test
+	public void yearsOverlapTest_whenListAndBetweenNotOverlap_shouldReturnFalse() {
+
+		Cron cron1 = cronParser.parse("0 0 0 1 JAN ? 2024,2025");
+		Cron cron2 = cronParser.parse("0 0 0 1 JAN ? 2021-2023");
+
+		assertFalse(cron1.yearsOverlap(cron2));
+	}
+
+	@Test
+	public void yearsOverlapTest_whenTwoListsOverlap_shouldReturnTrue() {
+
+		Cron cron1 = cronParser.parse("0 0 0 1 JAN ? 2024,2022,2027");
+		Cron cron2 = cronParser.parse("0 0 0 1 JAN ? 2025,2030,2024");
+
+		assertTrue(cron1.yearsOverlap(cron2));
+	}
+
+	@Test
+	public void yearsOverlapTest_whenTwoListsNotOverlap_shouldReturnFalse() {
+
+		Cron cron1 = cronParser.parse("0 0 0 1 JAN ? 2024,2022,2027");
+		Cron cron2 = cronParser.parse("0 0 0 1 JAN ? 2025,2030,2025");
+
+		assertFalse(cron1.yearsOverlap(cron2));
+	}
 }
