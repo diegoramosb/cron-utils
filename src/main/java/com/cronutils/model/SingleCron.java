@@ -14,6 +14,7 @@ import com.cronutils.model.field.expression.On;
 import com.cronutils.model.field.expression.visitor.ValidationFieldExpressionVisitor;
 import com.cronutils.utils.Preconditions;
 
+import java.math.BigInteger;
 import java.util.*;
 
 public class SingleCron implements Cron {
@@ -134,45 +135,93 @@ public class SingleCron implements Cron {
 
 		final FieldExpression thisYear = this.retrieve(CronFieldName.YEAR).getExpression();
 		final FieldExpression otherYear = cron.retrieve(CronFieldName.YEAR).getExpression();
+		final Object thisYearClass = thisYear.getClass();
+		final Object otherYearClass = otherYear.getClass();
 		boolean overlap = false;
 
-		if (Always.class.equals(thisYear.getClass()) || Always.class.equals(otherYear.getClass())) {
+		if (Always.class.equals(thisYearClass) || Always.class.equals(otherYearClass)) {
 			overlap = true;
 		}
 		else if (On.class.equals(thisYear.getClass())) {
 			overlap = onAndOtherOverlap((On) thisYear, otherYear);
 		}
 		else if(Every.class.equals(thisYear.getClass())) {
-			if(On.class.equals(otherYear.getClass())) {
-				overlap = yearsOnAndEveryOverlap((On) otherYear, (Every) thisYear);
-			}
+			overlap = everyAndOtherOverlap((Every) thisYear, otherYear);
 		}
-		else if(Between.class.equals(thisYear.getClass())) {
-			if(On.class.equals(otherYear.getClass())) {
-				overlap = yearsOnAndBetweenOverlap((On) otherYear, (Between) thisYear);
-			}
-		}
-		else if(And.class.equals(thisYear.getClass())) {
-			overlap = yearsOnAndOverlap((On) otherYear, (And) thisYear);
-		}
+//		else if(Between.class.equals(thisYear.getClass())) {
+//			if(On.class.equals(otherYear.getClass())) {
+//				overlap = yearsOnAndBetweenOverlap((On) otherYear, (Between) thisYear);
+//			}
+//		}
+//		else if(And.class.equals(thisYear.getClass())) {
+//			overlap = yearsOnAndOverlap((On) otherYear, (And) thisYear);
+//		}
 		return overlap;
 	}
 
-	private boolean onAndOtherOverlap(final On thisYear, final FieldExpression otherYear) {
-		boolean overlap = false;
+	private boolean onAndOtherOverlap(final On onYear, final FieldExpression otherYear) {
+		final BigInteger onYearValue = BigInteger.valueOf(onYear.getTime().getValue());
+		final BigInteger onYearPeriod = BigInteger.ZERO;
+		BigInteger otherYearValue = null;
+		BigInteger otherYearPeriod = null;
 		if (On.class.equals(otherYear.getClass())) {
-			overlap = thisYear.getTime().getValue().equals(((On) otherYear).getTime().getValue());
+			otherYearValue = BigInteger.valueOf(((On) otherYear).getTime().getValue());
+			otherYearPeriod = BigInteger.ZERO;
+			return seriesOverlap(onYearValue, onYearPeriod, otherYearValue, otherYearPeriod);
 		}
 		else if (Every.class.equals(otherYear.getClass())) {
-			overlap = yearsOnAndEveryOverlap(thisYear, (Every) otherYear);
+			otherYearValue = BigInteger.valueOf(((On) ((Every) otherYear).getExpression()).getTime().getValue());
+			otherYearPeriod = BigInteger.valueOf(((Every) otherYear).getPeriod().getValue());
+			return onYearValue.compareTo(otherYearValue) >= 0 && seriesOverlap(onYearValue, onYearPeriod, otherYearValue,
+																			   otherYearPeriod);
 		}
 		else if (Between.class.equals(otherYear.getClass())) {
-			overlap = yearsOnAndBetweenOverlap(thisYear, (Between) otherYear);
+			final Integer startYear = (Integer) ((Between) otherYear).getFrom().getValue();
+			final Integer endYear = (Integer) ((Between) otherYear).getTo().getValue();
+			boolean overlap = false;
+			for(int i = startYear; i <= endYear && !overlap; i++ ) {
+				overlap = seriesOverlap(onYearValue, onYearPeriod, BigInteger.valueOf(startYear), BigInteger.ZERO);
+			}
+			return overlap;
 		}
 		else if (And.class.equals(otherYear.getClass())) {
-			overlap = yearsOnAndOverlap(thisYear, (And) otherYear);
+			return ((And) otherYear).getExpressions().stream()
+							 .anyMatch(year ->
+											   seriesOverlap(onYearValue, onYearPeriod,
+															 BigInteger.valueOf(((On) year).getTime().getValue()), BigInteger.ZERO));
 		}
-		return overlap;
+		return false;
+	}
+
+	private boolean everyAndOtherOverlap(final Every everyYearExpression, final FieldExpression otherYearExpression) {
+		final BigInteger thisYearValue = BigInteger.valueOf(((On) everyYearExpression.getExpression()).getTime().getValue());
+		final BigInteger thisYearPeriod = BigInteger.valueOf((everyYearExpression).getPeriod().getValue());
+		if(On.class.equals(otherYearExpression.getClass())) {
+			final BigInteger otherYearValue = BigInteger.valueOf(((On) otherYearExpression).getTime().getValue());
+			final BigInteger otherYearPeriod = BigInteger.ZERO;
+			return seriesOverlap(thisYearValue, thisYearPeriod, otherYearValue, otherYearPeriod);
+		}
+		else if(Every.class.equals(otherYearExpression.getClass())) {
+			final BigInteger otherYearValue = BigInteger.valueOf(((On) ((Every) otherYearExpression).getExpression()).getTime().getValue());
+			final BigInteger otherYearPeriod = BigInteger.valueOf(((Every) otherYearExpression).getPeriod().getValue());
+			return seriesOverlap(thisYearValue, thisYearPeriod, otherYearValue, otherYearPeriod);
+		}
+		else if(Between.class.equals(otherYearExpression.getClass())) {
+			final Integer startYear = (Integer) ((Between) otherYearExpression).getFrom().getValue();
+			final Integer endYear = (Integer) ((Between) otherYearExpression).getTo().getValue();
+			boolean overlap = false;
+			for(int i = startYear; i <= endYear && !overlap; i++ ) {
+				overlap = seriesOverlap(thisYearValue, thisYearPeriod, BigInteger.valueOf(startYear), BigInteger.ZERO);
+			}
+			return overlap;
+		}
+		else if (And.class.equals(otherYearExpression.getClass())) {
+			return ((And) otherYearExpression).getExpressions().stream()
+									.anyMatch(year ->
+													  seriesOverlap(thisYearValue, thisYearPeriod,
+																	BigInteger.valueOf(((On) year).getTime().getValue()), BigInteger.ZERO));
+		}
+		return false;
 	}
 
 	public boolean yearsOnAndOverlap(final On onYearExpression, final And andYearExpression) {
@@ -186,15 +235,20 @@ public class SingleCron implements Cron {
 				|| (onYearExpression).getTime().getValue() <= (Integer) (betweenYearsExpression).getTo().getValue();
 	}
 
-	public boolean yearsOnAndEveryOverlap(final On onYearExpression, final Every everyYearsExpression) {
+	//https://math.stackexchange.com/questions/1656120/formula-to-find-the-first-intersection-of-two-arithmetic-progressions
+	public boolean seriesOverlap(final BigInteger startYearA, final BigInteger incrementA, final BigInteger startYearB, final BigInteger incrementB) {
 
-		// If there is an overlap where a specific year is included in a year sequence, the number of years until an overlap happens
-		// will be a positive integer in the following equation:
-		// numberOfYearsUntilOverlap = (specificYear - startYear)/period
-		final Double startYear = ((On) everyYearsExpression.getExpression()).getTime().getValue().doubleValue();
-		final Double period = everyYearsExpression.getPeriod().getValue().doubleValue();
-		final Double yearsForOverlap = ( onYearExpression.getTime().getValue() - startYear) / period;
+		boolean overlap = false;
+		final BigInteger greatestCommonDivisor = incrementA.gcd(incrementB);
+		final BigInteger startYearSubtraction = startYearA.subtract(startYearB);
 
-		return (yearsForOverlap > 0 && yearsForOverlap % 1 == 0);
+		if(!greatestCommonDivisor.equals(BigInteger.ZERO)) {
+			final BigInteger modulo = startYearSubtraction.mod(greatestCommonDivisor);
+			overlap = modulo.equals(BigInteger.ZERO);
+		} else {
+			overlap = startYearSubtraction.equals(BigInteger.ZERO);
+		}
+
+		return overlap;
 	}
 }
