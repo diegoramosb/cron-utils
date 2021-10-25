@@ -97,4 +97,10 @@ public class CompositeCron implements Cron {
 
         return false;
     }
+
+    @Override
+    public boolean monthsOverlap(final Cron cron) {
+
+        return false;
+    }
 }
