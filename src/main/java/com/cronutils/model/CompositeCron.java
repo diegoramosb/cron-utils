@@ -103,4 +103,10 @@ public class CompositeCron implements Cron {
 
         return false;
     }
+
+    @Override
+    public boolean daysOverlap(final Cron cron) {
+
+        return false;
+    }
 }

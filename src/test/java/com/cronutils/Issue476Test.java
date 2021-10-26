@@ -556,6 +556,79 @@ public class Issue476Test {
 	}
 
 	@Test
+	public void monthsOverlapTest_whenBetweenAndEveryOverlap_shouldReturnTrue() {
+
+		Cron cron1 = cronParser.parse("0 0 0 1 1-2 ? *");
+		Cron cron2 = cronParser.parse("0 0 0 1 3/11 ? *");
+
+		assertTrue(cron1.monthsOverlap(cron2));
+	}
+
+	@Test
+	public void monthsOverlapTest_whenBetweenAndEveryDoNotOverlap_shouldReturnFalse() {
+
+		Cron cron1 = cronParser.parse("0 0 0 1 1-2 ? *");
+		Cron cron2 = cronParser.parse("0 0 0 1 3/12 ? *");
+
+		assertFalse(cron1.monthsOverlap(cron2));
+	}
+
+
+	@Test
+	public void daysOverlapTest_whenDoMNthOnAndOnOverlap_shouldReturnTrue() {
+
+		Cron cron1 = cronParser.parse("0 0 0 L-5 * ? *");
+		Cron cron2 = cronParser.parse("0 0 0 L-5 * ? *");
+
+		assertTrue(cron1.daysOverlap(cron2));
+	}
+
+	@Test
+	public void daysOverlapTest_whenDoMNthOnAndOnDoNotOverlap_shouldReturnFalse() {
+
+		Cron cron1 = cronParser.parse("0 0 0 L-2 * ? *");
+		Cron cron2 = cronParser.parse("0 0 0 L-5 * ? *");
+
+		assertFalse(cron1.daysOverlap(cron2));
+	}
+
+	@Test
+	public void daysOverlapTest_whenDoMOnAndOnOverlap_shouldReturnTrue() {
+
+		Cron cron1 = cronParser.parse("0 0 0 10 * ? *");
+		Cron cron2 = cronParser.parse("0 0 0 10 * ? *");
+
+		assertTrue(cron1.daysOverlap(cron2));
+	}
+
+	@Test
+	public void daysOverlapTest_whenDoMOnAndOnDoNotOverlap_shouldReturnFalse() {
+
+		Cron cron1 = cronParser.parse("0 0 0 20 * ? *");
+		Cron cron2 = cronParser.parse("0 0 0 15 * ? *");
+
+		assertFalse(cron1.daysOverlap(cron2));
+	}
+
+	@Test
+	public void daysOverlapTest_whenDoMWeekdayOnAndOnOverlap_shouldReturnTrue() {
+
+		Cron cron1 = cronParser.parse("0 0 0 10W * ? *");
+		Cron cron2 = cronParser.parse("0 0 0 10W * ? *");
+
+		assertTrue(cron1.daysOverlap(cron2));
+	}
+
+	@Test
+	public void daysOverlapTest_whenDoMWeekdayOnAndOnDoNotOverlap_shouldReturnFalse() {
+
+		Cron cron1 = cronParser.parse("0 0 0 20W * ? *");
+		Cron cron2 = cronParser.parse("0 0 0 15W * ? *");
+
+		assertFalse(cron1.daysOverlap(cron2));
+	}
+
+	@Test
 	public void extendedEuclideanAlgorithmTest_whenQuotientNotZero_returnResult() {
 
 		final Integer a = -12;

@@ -83,5 +83,7 @@ public interface Cron extends Serializable {
     boolean yearsOverlap(final Cron cron);
 
     boolean monthsOverlap(final Cron cron);
+
+    boolean daysOverlap(final Cron cron);
 }
 

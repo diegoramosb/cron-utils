@@ -141,16 +141,50 @@ public class SingleCron implements Cron {
 		return overlap;
 	}
 
-	private boolean turnOnIntoEvery(final FieldExpression firstHigherExpression, final FieldExpression secondHigherExpression) {
+	private boolean shouldTransformOnIntoEvery(final On toVerify, final FieldExpression firstHigherExpression,
+									final FieldExpression secondHigherExpression) {
 
-		boolean result = false;
-		if(Always.class.equals(firstHigherExpression.getClass()) || Always.class.equals(secondHigherExpression.getClass())) {
-			result = true;
+		boolean transform = false;
+		if (Always.class.equals(firstHigherExpression.getClass()) || Always.class.equals(secondHigherExpression.getClass())) {
+			transform = true;
+		} else if (On.class.equals(firstHigherExpression.getClass()) || On.class.equals(secondHigherExpression.getClass())) {
+			transform = Every.class.equals(firstHigherExpression.getClass()) || Every.class.equals(secondHigherExpression.getClass());
 		}
-		else if (On.class.equals(firstHigherExpression.getClass()) || On.class.equals(secondHigherExpression.getClass())) {
-			result = Every.class.equals(firstHigherExpression.getClass()) || Every.class.equals(secondHigherExpression.getClass());
+
+		return transform;
+	}
+
+	public boolean daysOverlap(final Cron cron) {
+
+		FieldExpression thisExpression = this.retrieve(CronFieldName.DAY_OF_MONTH).getExpression() != FieldExpression.questionMark() ?
+										 this.retrieve(CronFieldName.DAY_OF_MONTH).getExpression() :
+										 this.retrieve(CronFieldName.DAY_OF_WEEK).getExpression();
+		FieldExpression otherExpression =
+				cron.retrieve(CronFieldName.DAY_OF_MONTH).getExpression() != FieldExpression.questionMark() ?
+				cron.retrieve(CronFieldName.DAY_OF_MONTH).getExpression() :
+				cron.retrieve(CronFieldName.DAY_OF_WEEK).getExpression();
+
+		boolean overlap = false;
+		if (Always.class.equals(thisExpression.getClass()) || Always.class.equals(otherExpression.getClass())) {
+			overlap = true;
+		} else if (On.class.equals(thisExpression.getClass())) {
+			overlap = onAndOtherOverlap((On) thisExpression, otherExpression);
+		} else if (Every.class.equals(thisExpression.getClass())) {
+			overlap = everyAndOtherOverlap((Every) thisExpression, otherExpression);
+		} else if (Between.class.equals(thisExpression.getClass())) {
+			final Integer start = (Integer) ((Between) thisExpression).getFrom().getValue();
+			final Integer end = (Integer) ((Between) thisExpression).getTo().getValue();
+			for (int i = start; i <= end && !overlap; i++) {
+				final On currentExpression = new On((new IntegerFieldValue(i)));
+				overlap = onAndOtherOverlap(currentExpression, otherExpression);
+			}
+		} else if (And.class.equals(thisExpression.getClass())) {
+			final FieldExpression finalOtherExpression = otherExpression;
+			overlap = ((And) thisExpression).getExpressions().stream()
+											.anyMatch(expression -> onAndOtherOverlap((On) expression, finalOtherExpression));
 		}
-		return result;
+
+		return overlap;
 	}
 
 	public boolean monthsOverlap(final Cron cron) {
@@ -158,15 +192,16 @@ public class SingleCron implements Cron {
 		FieldExpression thisExpression = this.retrieve(CronFieldName.MONTH).getExpression();
 		FieldExpression otherExpression = cron.retrieve(CronFieldName.MONTH).getExpression();
 		boolean overlap = false;
-		if (On.class.equals(thisExpression.getClass())
-				&& turnOnIntoEvery(this.retrieve(CronFieldName.YEAR).getExpression(),
-								   cron.retrieve(CronFieldName.YEAR).getExpression())) {
+		if (On.class.equals(thisExpression.getClass()) && shouldTransformOnIntoEvery((On) thisExpression,
+																					 this.retrieve(CronFieldName.YEAR).getExpression(),
+																					 cron.retrieve(CronFieldName.YEAR).getExpression())) {
 			thisExpression = new Every(thisExpression, new IntegerFieldValue(12));
 		}
-		if (On.class.equals(otherExpression.getClass())
-				&& turnOnIntoEvery(this.retrieve(CronFieldName.YEAR).getExpression(),
-								   cron.retrieve(CronFieldName.YEAR).getExpression())) {
+		if (On.class.equals(otherExpression.getClass()) && shouldTransformOnIntoEvery((On) otherExpression,
+																					  this.retrieve(CronFieldName.YEAR).getExpression(),
+																					  cron.retrieve(CronFieldName.YEAR).getExpression())) {
 			otherExpression = new Every(otherExpression, new IntegerFieldValue(12));
+
 		}
 
 		if (Always.class.equals(thisExpression.getClass()) || Always.class.equals(otherExpression.getClass())) {
@@ -180,7 +215,12 @@ public class SingleCron implements Cron {
 			final Integer end = (Integer) ((Between) thisExpression).getTo().getValue();
 			for (int i = start; i <= end && !overlap; i++) {
 				final On currentExpression = new On((new IntegerFieldValue(i)));
-				overlap = onAndOtherOverlap(currentExpression, otherExpression);
+				if(shouldTransformOnIntoEvery(currentExpression, this.retrieve(CronFieldName.YEAR).getExpression(),
+											  cron.retrieve(CronFieldName.YEAR).getExpression())) {
+					overlap = everyAndOtherOverlap(new Every(currentExpression, new IntegerFieldValue(12)), otherExpression);
+				} else {
+					overlap = onAndOtherOverlap(currentExpression, otherExpression);
+				}
 			}
 		} else if (And.class.equals(thisExpression.getClass())) {
 			final FieldExpression finalOtherExpression = otherExpression;
@@ -220,12 +260,13 @@ public class SingleCron implements Cron {
 
 	private boolean onAndOtherOverlap(final On onYear, final FieldExpression otherYear) {
 
-		final Integer onYearValue = onYear.getTime().getValue();
+		final Integer onYearValue = onYear.getTime().getValue() != -1 ? onYear.getTime().getValue() : onYear.getNth().getValue();
 		final Integer onYearPeriod = 0;
 		Integer otherYearValue = null;
 		Integer otherYearPeriod = null;
 		if (On.class.equals(otherYear.getClass())) {
-			otherYearValue = ((On) otherYear).getTime().getValue();
+			otherYearValue = ((On) otherYear).getTime().getValue() != -1 ? ((On) otherYear).getTime().getValue() :
+							 ((On) otherYear).getNth().getValue();
 			otherYearPeriod = 0;
 			return SequenceUtils.firstOverlap(onYearValue, onYearPeriod, otherYearValue, otherYearPeriod) < Integer.MAX_VALUE;
 		} else if (Every.class.equals(otherYear.getClass())) {
