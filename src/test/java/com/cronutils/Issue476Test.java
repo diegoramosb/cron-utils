@@ -773,7 +773,7 @@ public class Issue476Test {
 	}
 
 	@Test
-	public void daysOverlapTest_whenHoursOnAndOnOverlap_shouldReturnTrue() {
+	public void hoursOverlapTest_whenOnAndOnOverlap_shouldReturnTrue() {
 
 		Cron cron1 = cronParser.parse("0 0 0 ? * * *");
 		Cron cron2 = cronParser.parse("0 0 0 ? * * *");
@@ -782,7 +782,7 @@ public class Issue476Test {
 	}
 
 	@Test
-	public void daysOverlapTest_whenHoursOnAndOnDoNotOverlap_shouldReturnFalse() {
+	public void hoursOverlapTest_whenOnAndOnDoNotOverlap_shouldReturnFalse() {
 
 		Cron cron1 = cronParser.parse("0 0 0 ? * * *");
 		Cron cron2 = cronParser.parse("0 0 1 ? * * *");
@@ -792,7 +792,7 @@ public class Issue476Test {
 
 
 	@Test
-	public void daysOverlapTest_whenHoursOnAndEveryOverlap_shouldReturnTrue() {
+	public void hoursOverlapTest_whenOnAndEveryOverlap_shouldReturnTrue() {
 
 		Cron cron1 = cronParser.parse("0 0 0 ? * * *");
 		Cron cron2 = cronParser.parse("0 0 0/6 ? * * *");
@@ -801,7 +801,7 @@ public class Issue476Test {
 	}
 
 	@Test
-	public void daysOverlapTest_whenHoursOnAndEveryDoNotOverlap_shouldReturnFalse() {
+	public void hoursOverlapTest_whenOnAndEveryDoNotOverlap_shouldReturnFalse() {
 
 		Cron cron1 = cronParser.parse("0 0 0 ? * * *");
 		Cron cron2 = cronParser.parse("0 0 1/6 ? * * *");
@@ -810,7 +810,7 @@ public class Issue476Test {
 	}
 
 	@Test
-	public void daysOverlapTest_whenHoursOnAndBetweenOverlap_shouldReturnTrue() {
+	public void hoursOverlapTest_whenOnAndBetweenOverlap_shouldReturnTrue() {
 
 		Cron cron1 = cronParser.parse("0 0 2 ? * * *");
 		Cron cron2 = cronParser.parse("0 0 0-5 ? * * *");
@@ -819,7 +819,7 @@ public class Issue476Test {
 	}
 
 	@Test
-	public void daysOverlapTest_whenHoursOnAndBetweenDoNotOverlap_shouldReturnFalse() {
+	public void hoursOverlapTest_whenOnAndBetweenDoNotOverlap_shouldReturnFalse() {
 
 		Cron cron1 = cronParser.parse("0 0 0 ? * * *");
 		Cron cron2 = cronParser.parse("0 0 1-23 ? * * *");
@@ -828,7 +828,7 @@ public class Issue476Test {
 	}
 
 	@Test
-	public void daysOverlapTest_whenHoursOnAndListOverlap_shouldReturnTrue() {
+	public void hoursOverlapTest_whenOnAndListOverlap_shouldReturnTrue() {
 
 		Cron cron1 = cronParser.parse("0 0 2 ? * * *");
 		Cron cron2 = cronParser.parse("0 0 1,2,3 ? * * *");
@@ -837,7 +837,7 @@ public class Issue476Test {
 	}
 
 	@Test
-	public void daysOverlapTest_whenHoursOnAndListDoNotOverlap_shouldReturnFalse() {
+	public void hoursOverlapTest_whenOnAndListDoNotOverlap_shouldReturnFalse() {
 
 		Cron cron1 = cronParser.parse("0 0 0 ? * * *");
 		Cron cron2 = cronParser.parse("0 0 1,2,3 ? * * *");
@@ -846,7 +846,7 @@ public class Issue476Test {
 	}
 
 	@Test
-	public void daysOverlapTest_whenHoursEveryAndBetweenOverlap_shouldReturnTrue() {
+	public void hoursOverlapTest_whenHoursEveryAndBetweenOverlap_shouldReturnTrue() {
 
 		Cron cron1 = cronParser.parse("0 0 1/6 ? * * *");
 		Cron cron2 = cronParser.parse("0 0 6-8 ? * * *");
@@ -855,7 +855,7 @@ public class Issue476Test {
 	}
 
 	@Test
-	public void daysOverlapTest_whenHoursEveryAndBetweenDoNotOverlap_shouldReturnFalse() {
+	public void hoursOverlapTest_whenEveryAndBetweenDoNotOverlap_shouldReturnFalse() {
 
 		Cron cron1 = cronParser.parse("0 0 0/6 ? * * *");
 		Cron cron2 = cronParser.parse("0 0 3-5 ? * * *");
@@ -864,7 +864,7 @@ public class Issue476Test {
 	}
 
 	@Test
-	public void daysOverlapTest_whenHoursBetweenAndListOverlap_shouldReturnTrue() {
+	public void hoursOverlapTest_whenBetweenAndListOverlap_shouldReturnTrue() {
 
 		Cron cron1 = cronParser.parse("0 0 6-8 ? * * *");
 		Cron cron2 = cronParser.parse("0 0 1,7,17 ? * * *");
@@ -873,7 +873,7 @@ public class Issue476Test {
 	}
 
 	@Test
-	public void daysOverlapTest_whenBetweenAndListDoNotOverlap_shouldReturnFalse() {
+	public void hoursOverlapTest_whenBetweenAndListDoNotOverlap_shouldReturnFalse() {
 
 		Cron cron1 = cronParser.parse("0 0 6-8 ? * * *");
 		Cron cron2 = cronParser.parse("0 0 14,16 ? * * *");
@@ -881,6 +881,114 @@ public class Issue476Test {
 		assertFalse(cron1.hoursOverlap(cron2));
 	}
 
+	@Test
+	public void minutesOverlapTest_whenOnAndOnOverlap_shouldReturnTrue() {
+
+		Cron cron1 = cronParser.parse("0 0 * ? * * *");
+		Cron cron2 = cronParser.parse("0 0 * ? * * *");
+
+		assertTrue(cron1.minutesOverlap(cron2));
+	}
+
+	@Test
+	public void minutesOverlapTest_whenOnAndOnDoNotOverlap_shouldReturnFalse() {
+
+		Cron cron1 = cronParser.parse("0 1 0 ? * * *");
+		Cron cron2 = cronParser.parse("0 0 0 ? * * *");
+
+		assertFalse(cron1.minutesOverlap(cron2));
+	}
+
+
+	@Test
+	public void minutesOverlapTest_whenOnAndEveryOverlap_shouldReturnTrue() {
+
+		Cron cron1 = cronParser.parse("0 1/11 * ? * * *");
+		Cron cron2 = cronParser.parse("0 0 * ? * * *");
+
+		assertTrue(cron1.minutesOverlap(cron2));
+	}
+
+	@Test
+	public void minutesOverlapTest_whenOnAndEveryDoNotOverlap_shouldReturnFalse() {
+
+		Cron cron1 = cronParser.parse("0 1/1 0 ? * * *");
+		Cron cron2 = cronParser.parse("0 0 0 ? * * *");
+
+		assertFalse(cron1.minutesOverlap(cron2));
+	}
+
+	@Test
+	public void minutesOverlapTest_whenOnAndBetweenOverlap_shouldReturnTrue() {
+
+		Cron cron1 = cronParser.parse("0 5 * ? * * *");
+		Cron cron2 = cronParser.parse("0 2-10 * ? * * *");
+
+		assertTrue(cron1.minutesOverlap(cron2));
+	}
+
+	@Test
+	public void minutesOverlapTest_whenOnAndBetweenDoNotOverlap_shouldReturnFalse() {
+
+		Cron cron1 = cronParser.parse("0 1 * ? * * *");
+		Cron cron2 = cronParser.parse("0 2-59 * ? * * *");
+
+		assertFalse(cron1.minutesOverlap(cron2));
+	}
+
+	@Test
+	public void minutesOverlapTest_whenOnAndListOverlap_shouldReturnTrue() {
+
+		Cron cron1 = cronParser.parse("0 10 * ? * * *");
+		Cron cron2 = cronParser.parse("0 2,7,10,27 * ? * * *");
+
+		assertTrue(cron1.minutesOverlap(cron2));
+	}
+
+	@Test
+	public void minutesOverlapTest_whenOnAndListDoNotOverlap_shouldReturnFalse() {
+
+		Cron cron1 = cronParser.parse("0 10 * ? * * *");
+		Cron cron2 = cronParser.parse("0 2,7,27 *  ? * * *");
+
+		assertFalse(cron1.minutesOverlap(cron2));
+	}
+
+	@Test
+	public void minutesOverlapTest_whenEveryAndBetweenOverlap_shouldReturnTrue() {
+
+		Cron cron1 = cronParser.parse("0 0/7 * ? * * *");
+		Cron cron2 = cronParser.parse("0 12-15 * ? * * *");
+
+		assertTrue(cron1.minutesOverlap(cron2));
+	}
+
+	@Test
+	public void minutesOverlapTest_whenEveryAndBetweenDoNotOverlap_shouldReturnFalse() {
+
+		Cron cron1 = cronParser.parse("0 0/7 * ? * * *");
+		Cron cron2 = cronParser.parse("0 3-5 * ? * * *");
+
+		assertFalse(cron1.minutesOverlap(cron2));
+	}
+
+	@Test
+	public void minutesOverlapTest_whenBetweenAndListOverlap_shouldReturnTrue() {
+
+		Cron cron1 = cronParser.parse("0 10-20 * ? * * *");
+		Cron cron2 = cronParser.parse("0 0,3,18,29 * ? * * *");
+
+		assertTrue(cron1.minutesOverlap(cron2));
+	}
+
+	@Test
+	public void minutesOverlapTest_whenBetweenAndListDoNotOverlap_shouldReturnFalse() {
+
+		Cron cron1 = cronParser.parse("0 10-20 * ? * * *");
+		Cron cron2 = cronParser.parse("0 0,3,29 * ? * * *");
+
+		assertFalse(cron1.minutesOverlap(cron2));
+	}
 
 
 	@Test
@@ -957,6 +1065,4 @@ public class Issue476Test {
 
 		assertEquals(Integer.MAX_VALUE, SequenceUtils.firstOverlap(a1, d ,b1, e));
 	}
-
-
 }

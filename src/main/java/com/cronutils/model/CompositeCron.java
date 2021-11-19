@@ -115,4 +115,10 @@ public class CompositeCron implements Cron {
 
         return false;
     }
+
+    @Override
+    public boolean minutesOverlap(final Cron cron) {
+
+        return false;
+    }
 }
