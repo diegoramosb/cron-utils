@@ -141,6 +141,13 @@ public class SingleCron implements Cron {
 		return overlap;
 	}
 
+	/**
+	 * Indicates whether an On expression should be turn into an Every expression to check the overlap
+	 *
+	 * @param firstHigherExpression the expression of the higher hierarchy of the first expression to evaluate
+	 * @param secondHigherExpression the expression of the higher hierarchy of the second expression to evaluate
+	 * @return true if the higher level expression of the expressions to transform is an Any or an Every
+	 */
 	private boolean shouldTransformOnIntoEvery(final FieldExpression firstHigherExpression,
 									final FieldExpression secondHigherExpression) {
 
@@ -189,24 +196,42 @@ public class SingleCron implements Cron {
 
 	public boolean daysOverlap(final Cron cron) {
 
-		FieldExpression thisExpression = this.retrieve(CronFieldName.DAY_OF_MONTH).getExpression() != FieldExpression.questionMark() ?
+		final CronFieldName thisExpressonDayType =
+				this.retrieve(CronFieldName.DAY_OF_MONTH).getExpression() != FieldExpression.questionMark() ?
+				CronFieldName.DAY_OF_MONTH : CronFieldName.DAY_OF_WEEK;
+		final CronFieldName otherExpressionDayType =
+				cron.retrieve(CronFieldName.DAY_OF_MONTH).getExpression() != FieldExpression.questionMark() ?
+				CronFieldName.DAY_OF_MONTH : CronFieldName.DAY_OF_WEEK;
+
+		FieldExpression thisExpression = thisExpressonDayType.equals(CronFieldName.DAY_OF_MONTH) ?
 										 this.retrieve(CronFieldName.DAY_OF_MONTH).getExpression() :
 										 this.retrieve(CronFieldName.DAY_OF_WEEK).getExpression();
-		FieldExpression otherExpression =
-				cron.retrieve(CronFieldName.DAY_OF_MONTH).getExpression() != FieldExpression.questionMark() ?
-				cron.retrieve(CronFieldName.DAY_OF_MONTH).getExpression() :
-				cron.retrieve(CronFieldName.DAY_OF_WEEK).getExpression();
-
+		FieldExpression otherExpression = otherExpressionDayType.equals(CronFieldName.DAY_OF_MONTH) ?
+										  cron.retrieve(CronFieldName.DAY_OF_MONTH).getExpression() :
+										  cron.retrieve(CronFieldName.DAY_OF_WEEK).getExpression();
 		boolean overlap = false;
 
-		if (On.class.equals(thisExpression.getClass())) {
-			thisExpression = new Every(thisExpression, new IntegerFieldValue(7));
+		if(shouldTransformOnIntoEvery(this.retrieve(CronFieldName.MONTH).getExpression(),
+									  this.retrieve(CronFieldName.MONTH).getExpression())) {
+			if (On.class.equals(thisExpression.getClass()) && !On.class.equals(otherExpression.getClass())) {
+				if (thisExpressonDayType.equals(CronFieldName.DAY_OF_WEEK)) {
+					thisExpression = new Every(thisExpression, new IntegerFieldValue(7));
+				} else {
+					thisExpression = new Every(thisExpression, new IntegerFieldValue(31));
+				}
+			} else if (On.class.equals(otherExpression.getClass()) && !On.class.equals(thisExpression.getClass())) {
+				if (otherExpressionDayType.equals(CronFieldName.DAY_OF_WEEK)) {
+					otherExpression = new Every(otherExpression, new IntegerFieldValue(7));
+				} else {
+					otherExpression = new Every(otherExpression, new IntegerFieldValue(31));
+				}
+			}
 		}
-		if (On.class.equals(otherExpression.getClass())) {
-			otherExpression = new Every(otherExpression, new IntegerFieldValue(7));
-		}
+
 		if (Always.class.equals(thisExpression.getClass()) || Always.class.equals(otherExpression.getClass())) {
 			overlap = true;
+		} else if (On.class.equals(thisExpression.getClass())) {
+			overlap = onAndOtherOverlap((On) thisExpression, otherExpression);
 		} else if (Every.class.equals(thisExpression.getClass())) {
 			overlap = everyAndOtherOverlap((Every) thisExpression, otherExpression);
 		} else if (Between.class.equals(thisExpression.getClass())) {

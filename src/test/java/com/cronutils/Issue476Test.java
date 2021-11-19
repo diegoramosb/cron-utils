@@ -656,16 +656,16 @@ public class Issue476Test {
 	}
 
 	@Test
-	public void daysOverlapTest_whenDoMEveryAndEveryOverlap_shouldReturnTrue() {
+	public void daysOverlapTest_whenDoMEveryAndOnOverlap_shouldReturnTrue() {
 
 		Cron cron1 = cronParser.parse("0 0 0 10/1 * ? *");
-		Cron cron2 = cronParser.parse("0 0 0 15 * ? *");
+		Cron cron2 = cronParser.parse("0 0 0 5 * ? *");
 
 		assertTrue(cron1.daysOverlap(cron2));
 	}
 
 	@Test
-	public void daysOverlapTest_whenDoMEveryAndEveryDoNotOverlap_shouldReturnFalse() {
+	public void daysOverlapTest_whenDoMEveryAndOnDoNotOverlap_shouldReturnFalse() {
 
 		Cron cron1 = cronParser.parse("0 0 0 10/1 JAN ? *");
 		Cron cron2 = cronParser.parse("0 0 0 5 JAN ? *");
