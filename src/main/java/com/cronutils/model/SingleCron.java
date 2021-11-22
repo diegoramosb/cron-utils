@@ -136,9 +136,7 @@ public class SingleCron implements Cron {
 	@Override
 	public boolean overlap(final Cron cron) {
 
-		boolean overlap = false;
-
-		return overlap;
+		return secondsOverlap(cron) && minutesOverlap(cron) && hoursOverlap(cron) && daysOverlap(cron) && monthsOverlap(cron) && yearsOverlap(cron);
 	}
 
 	/**
@@ -159,6 +157,45 @@ public class SingleCron implements Cron {
 		}
 
 		return transform;
+	}
+
+	@Override
+	public boolean secondsOverlap(final Cron cron) {
+
+		FieldExpression thisExpression = this.retrieve(CronFieldName.SECOND).getExpression();
+		FieldExpression otherExpression = cron.retrieve(CronFieldName.SECOND).getExpression();
+
+		boolean overlap = false;
+
+		if(shouldTransformOnIntoEvery(this.retrieve(CronFieldName.MINUTE).getExpression(),
+									  this.retrieve(CronFieldName.MINUTE).getExpression())) {
+			if (On.class.equals(thisExpression.getClass()) && !On.class.equals(otherExpression.getClass())) {
+				thisExpression = new Every(thisExpression, new IntegerFieldValue(60));
+			}
+			else if (On.class.equals(otherExpression.getClass()) && !On.class.equals(thisExpression.getClass())) {
+				otherExpression = new Every(otherExpression, new IntegerFieldValue(60));
+			}
+		}
+		if (Always.class.equals(thisExpression.getClass()) || Always.class.equals(otherExpression.getClass())) {
+			overlap = true;
+		} else if (On.class.equals(thisExpression.getClass())) {
+			overlap = onAndOtherOverlap((On) thisExpression, otherExpression);
+		} else if (Every.class.equals(thisExpression.getClass())) {
+			overlap = everyAndOtherOverlap((Every) thisExpression, otherExpression);
+		} else if (Between.class.equals(thisExpression.getClass())) {
+			final Integer start = (Integer) ((Between) thisExpression).getFrom().getValue();
+			final Integer end = (Integer) ((Between) thisExpression).getTo().getValue();
+			for (int i = start; i <= end && !overlap; i++) {
+				final On currentExpression = new On((new IntegerFieldValue(i)));
+				overlap = onAndOtherOverlap(currentExpression, otherExpression);
+			}
+		} else if (And.class.equals(thisExpression.getClass())) {
+			final FieldExpression finalOtherExpression = otherExpression;
+			overlap = ((And) thisExpression).getExpressions().stream()
+											.anyMatch(expression -> onAndOtherOverlap((On) expression, finalOtherExpression));
+		}
+
+		return overlap;
 	}
 
 	@Override
@@ -208,14 +245,23 @@ public class SingleCron implements Cron {
 
 		boolean overlap = false;
 
-		if (On.class.equals(thisExpression.getClass())) {
-			thisExpression = new Every(thisExpression, new IntegerFieldValue(24));
+		if(shouldTransformOnIntoEvery(this.retrieve(CronFieldName.DAY_OF_WEEK).getExpression(),
+									  this.retrieve(CronFieldName.DAY_OF_WEEK).getExpression()) ||
+				shouldTransformOnIntoEvery(this.retrieve(CronFieldName.DAY_OF_MONTH).getExpression(),
+										   this.retrieve(CronFieldName.DAY_OF_MONTH).getExpression())
+		) {
+			if (On.class.equals(thisExpression.getClass()) && !On.class.equals(otherExpression.getClass())) {
+				thisExpression = new Every(thisExpression, new IntegerFieldValue(24));
+			}
+			else if (On.class.equals(otherExpression.getClass()) && !On.class.equals(thisExpression.getClass())) {
+				otherExpression = new Every(otherExpression, new IntegerFieldValue(24));
+			}
 		}
-		if (On.class.equals(otherExpression.getClass())) {
-			otherExpression = new Every(otherExpression, new IntegerFieldValue(24));
-		}
+
 		if (Always.class.equals(thisExpression.getClass()) || Always.class.equals(otherExpression.getClass())) {
 			overlap = true;
+		} else if (On.class.equals(thisExpression.getClass())) {
+			overlap = onAndOtherOverlap((On) thisExpression, otherExpression);
 		} else if (Every.class.equals(thisExpression.getClass())) {
 			overlap = everyAndOtherOverlap((Every) thisExpression, otherExpression);
 		} else if (Between.class.equals(thisExpression.getClass())) {

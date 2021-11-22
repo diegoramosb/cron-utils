@@ -89,5 +89,7 @@ public interface Cron extends Serializable {
     boolean hoursOverlap(final Cron cron);
 
     boolean minutesOverlap(final Cron cron);
+
+    boolean secondsOverlap(final Cron cron);
 }
 

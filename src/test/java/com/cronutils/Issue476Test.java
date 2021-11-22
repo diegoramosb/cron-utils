@@ -211,7 +211,6 @@ public class Issue476Test {
 		assertFalse(cron1.yearsOverlap(cron2));
 	}
 
-
 	@Test
 	public void yearsOverlapTest_whenBetweenAndOnOverlap_shouldReturnTrue() {
 
@@ -229,7 +228,6 @@ public class Issue476Test {
 
 		assertFalse(cron1.yearsOverlap(cron2));
 	}
-
 
 	@Test
 	public void yearsOverlapTest_whenBetweenAndEveryOverlap_shouldReturnTrue() {
@@ -573,7 +571,6 @@ public class Issue476Test {
 		assertFalse(cron1.monthsOverlap(cron2));
 	}
 
-
 	@Test
 	public void daysOverlapTest_whenDoMNthOnAndOnOverlap_shouldReturnTrue() {
 
@@ -790,7 +787,6 @@ public class Issue476Test {
 		assertFalse(cron1.hoursOverlap(cron2));
 	}
 
-
 	@Test
 	public void hoursOverlapTest_whenOnAndEveryOverlap_shouldReturnTrue() {
 
@@ -899,7 +895,6 @@ public class Issue476Test {
 		assertFalse(cron1.minutesOverlap(cron2));
 	}
 
-
 	@Test
 	public void minutesOverlapTest_whenOnAndEveryOverlap_shouldReturnTrue() {
 
@@ -990,6 +985,131 @@ public class Issue476Test {
 		assertFalse(cron1.minutesOverlap(cron2));
 	}
 
+	@Test
+	public void secondsOverlapTest_whenOnAndOnOverlap_shouldReturnTrue() {
+
+		Cron cron1 = cronParser.parse("0 0 * ? * * *");
+		Cron cron2 = cronParser.parse("0 0 * ? * * *");
+
+		assertTrue(cron1.secondsOverlap(cron2));
+	}
+
+	@Test
+	public void secondsOverlapTest_whenOnAndOnDoNotOverlap_shouldReturnFalse() {
+
+		Cron cron1 = cronParser.parse("1 0 * ? * * *");
+		Cron cron2 = cronParser.parse("0 0 * ? * * *");
+
+		assertFalse(cron1.secondsOverlap(cron2));
+	}
+
+	@Test
+	public void secondsOverlapTest_whenOnAndEveryOverlap_shouldReturnTrue() {
+
+		Cron cron1 = cronParser.parse("10/10 * * ? * * *");
+		Cron cron2 = cronParser.parse("0 * * ? * * *");
+
+		assertTrue(cron1.secondsOverlap(cron2));
+	}
+
+	@Test
+	public void secondsOverlapTest_whenOnAndEveryDoNotOverlap_shouldReturnFalse() {
+
+		Cron cron1 = cronParser.parse("10/10 0 * ? * * *");
+		Cron cron2 = cronParser.parse("0 0 * ? * * *");
+
+		assertFalse(cron1.secondsOverlap(cron2));
+	}
+
+	@Test
+	public void secondsOverlapTest_whenOnAndBetweenOverlap_shouldReturnTrue() {
+
+		Cron cron1 = cronParser.parse("5 * * ? * * *");
+		Cron cron2 = cronParser.parse("2-10 * * ? * * *");
+
+		assertTrue(cron1.secondsOverlap(cron2));
+	}
+
+	@Test
+	public void secondsOverlapTest_whenOnAndBetweenDoNotOverlap_shouldReturnFalse() {
+
+		Cron cron1 = cronParser.parse("1 * * ? * * *");
+		Cron cron2 = cronParser.parse("2-59 * * ? * * *");
+
+		assertFalse(cron1.secondsOverlap(cron2));
+	}
+
+	@Test
+	public void secondsOverlapTest_whenOnAndListOverlap_shouldReturnTrue() {
+
+		Cron cron1 = cronParser.parse("10 * * ? * * *");
+		Cron cron2 = cronParser.parse("2,7,10,27 * * ? * * *");
+
+		assertTrue(cron1.secondsOverlap(cron2));
+	}
+
+	@Test
+	public void secondsOverlapTest_whenOnAndListDoNotOverlap_shouldReturnFalse() {
+
+		Cron cron1 = cronParser.parse("10 * * ? * * *");
+		Cron cron2 = cronParser.parse("2,7,27 * *  ? * * *");
+
+		assertFalse(cron1.secondsOverlap(cron2));
+	}
+
+	@Test
+	public void secondsOverlapTest_whenEveryAndBetweenOverlap_shouldReturnTrue() {
+
+		Cron cron1 = cronParser.parse("0/7 * * ? * * *");
+		Cron cron2 = cronParser.parse("12-15 * * ? * * *");
+
+		assertTrue(cron1.secondsOverlap(cron2));
+	}
+
+	@Test
+	public void secondsOverlapTest_whenEveryAndBetweenDoNotOverlap_shouldReturnFalse() {
+
+		Cron cron1 = cronParser.parse("0/7 * * ? * * *");
+		Cron cron2 = cronParser.parse("3-5 * * ? * * *");
+
+		assertFalse(cron1.secondsOverlap(cron2));
+	}
+
+	@Test
+	public void secondsOverlapTest_whenBetweenAndListOverlap_shouldReturnTrue() {
+
+		Cron cron1 = cronParser.parse("10-20 * * ? * * *");
+		Cron cron2 = cronParser.parse("0,3,18,29 * * ? * * *");
+
+		assertTrue(cron1.secondsOverlap(cron2));
+	}
+
+	@Test
+	public void secondsOverlapTest_whenBetweenAndListDoNotOverlap_shouldReturnFalse() {
+
+		Cron cron1 = cronParser.parse("10-20 * * ? * * *");
+		Cron cron2 = cronParser.parse("0,3,29 * * ? * * *");
+
+		assertFalse(cron1.secondsOverlap(cron2));
+	}
+
+	@Test
+	public void overlapTest_whenOnAndOnOverlap_shouldReturnTrue() {
+
+		Cron cron1 = cronParser.parse("0 0 12 1 2/3 ? 2022");
+		Cron cron2 = cronParser.parse("0 0 12 1 1/4 ? 2022");
+
+		assertTrue(cron1.overlap(cron2));
+	}
+
+	@Test
+	public void overlapTest_whenOnAndOnNotOverlap_shouldReturnFalse() {
+
+		Cron cron1 = cronParser.parse("0 0 12 1 1/3 ? 2022");
+		Cron cron2 = cronParser.parse("0 0 12 1 1/4 ? 2022");
+
+		assertTrue(cron1.overlap(cron2));
+	}
 
 	@Test
 	public void extendedEuclideanAlgorithmTest_whenQuotientNotZero_returnResult() {
@@ -997,9 +1117,8 @@ public class Issue476Test {
 		final Integer a = -12;
 		final Integer b = 7;
 
-		assertArrayEquals(new Integer[]{1, -3, -5}, SequenceUtils.extendedEuclideanAlgorithm(a, b));
+		assertArrayEquals(new Integer[] {1, -3, -5}, SequenceUtils.extendedEuclideanAlgorithm(a, b));
 	}
-
 
 	@Test
 	public void extendedEuclideanAlgorithmTest_whenQuotientZero_returnResult() {
@@ -1007,9 +1126,8 @@ public class Issue476Test {
 		final Integer a = 5;
 		final Integer b = 0;
 
-		assertArrayEquals(new Integer[]{5, 1, 0}, SequenceUtils.extendedEuclideanAlgorithm(a, b));
+		assertArrayEquals(new Integer[] {5, 1, 0}, SequenceUtils.extendedEuclideanAlgorithm(a, b));
 	}
-
 
 	@Test
 	public void extendedEuclideanAlgorithmTest_whenDividendZero_returnResult() {
@@ -1017,7 +1135,7 @@ public class Issue476Test {
 		final Integer a = 0;
 		final Integer b = 3;
 
-		assertArrayEquals(new Integer[]{3, 0, 1}, SequenceUtils.extendedEuclideanAlgorithm(a, b));
+		assertArrayEquals(new Integer[] {3, 0, 1}, SequenceUtils.extendedEuclideanAlgorithm(a, b));
 	}
 
 	@Test
@@ -1052,7 +1170,7 @@ public class Issue476Test {
 		final Integer b1 = 2;
 		final Integer e = 17;
 
-		assertEquals(155, SequenceUtils.firstOverlap(a1, d ,b1, e));
+		assertEquals(155, SequenceUtils.firstOverlap(a1, d, b1, e));
 	}
 
 	@Test
@@ -1063,6 +1181,6 @@ public class Issue476Test {
 		final Integer b1 = 2;
 		final Integer e = 10;
 
-		assertEquals(Integer.MAX_VALUE, SequenceUtils.firstOverlap(a1, d ,b1, e));
+		assertEquals(Integer.MAX_VALUE, SequenceUtils.firstOverlap(a1, d, b1, e));
 	}
 }
